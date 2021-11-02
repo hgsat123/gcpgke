@@ -1,0 +1,95 @@
+https://github.com/kubernetes-sigs/metrics-server/releases
+
++91 86602 16993  - Raju
+
+hgsat123@cloudshell:~ (my-project-64389)$ export CLOUDSDK_COMPUTE_REGION=us-west2
+hgsat123@cloudshell:~ (my-project-64389)$ export CLOUDSDK_COMPUTE_ZONE=us-west2-a
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud config set compute/region us-west2
+WARNING: Property [region] is overridden by environment setting [CLOUDSDK_COMPUTE_REGION=us-west2]
+Updated property [compute/region].
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud config set compute/zone us-west2-a
+WARNING: Property [zone] is overridden by environment setting [CLOUDSDK_COMPUTE_ZONE=us-west2-a]
+Updated property [compute/zone].
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud container clusters create mytest --num-nodes 3
+WARNING: Starting in January 2021, clusters will use the Regular release channel by default when `--cluster-version`, `--release-channel`, `--no-enable-autoupgrade`, and `--no-enable-autorepair` flags are not specified.
+WARNING: Currently VPC-native is the default mode during cluster creation for versions greater than 1.21.0-gke.1500. To create advanced routes based clusters, please pass the `--no-enable-ip-alias` flag
+WARNING: Starting with version 1.18, clusters will have shielded GKE nodes by default.
+WARNING: Your Pod address range (`--cluster-ipv4-cidr`) can accommodate at most 1008 node(s).
+WARNING: Starting with version 1.19, newly created clusters and node-pools will have COS_CONTAINERD as the default node image when no image type is specified.
+Creating cluster mytest in us-west2-a...done.     
+Created [https://container.googleapis.com/v1/projects/my-project-64389/zones/us-west2-a/clusters/mytest].
+To inspect the contents of your cluster, go to: https://console.cloud.google.com/kubernetes/workload_/gcloud/us-west2-a/mytest?project=my-project-64389
+kubeconfig entry generated for mytest.
+NAME: mytest
+LOCATION: us-west2-a
+MASTER_VERSION: 1.20.10-gke.1600
+MASTER_IP: 35.236.73.205
+MACHINE_TYPE: e2-medium
+NODE_VERSION: 1.20.10-gke.1600
+NUM_NODES: 3
+STATUS: RUNNING
+hgsat123@cloudshell:~ (my-project-64389)$
+
+
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud container clusters get-credentials mytest
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for mytest.
+hgsat123@cloudshell:~ (my-project-64389)$ export CURRENT_CONTEXT=$(kubectl config current-context) && export CURRENT_CLUSTER=$(kubectl config view -o go-template="{{\$curr_context := \"$CURRENT_CONTEXT\" }}{{range .contexts}}{{if eq .name \$curr_context}}{{.context.cluster}}{{end}}{{end}}") && echo $(kubectl config view -o go-template="{{\$cluster_context := \"$CURRENT_CLUSTER\"}}{{range .clusters}}{{if eq .name \$cluster_context}}{{.cluster.server}}{{end}}{{end}}")
+https://35.236.73.205
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get nodes
+NAME                                    STATUS   ROLES    AGE     VERSION
+gke-mytest-default-pool-0ba417c2-grf1   Ready    <none>   2m15s   v1.20.10-gke.1600
+gke-mytest-default-pool-0ba417c2-ht8l   Ready    <none>   2m15s   v1.20.10-gke.1600
+gke-mytest-default-pool-0ba417c2-rjzl   Ready    <none>   2m15s   v1.20.10-gke.1600
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get ns
+NAME              STATUS   AGE
+default           Active   24h
+kube-node-lease   Active   24h
+kube-public       Active   24h
+kube-system       Active   24h
+monitoring        Active   24h
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get po -n monitoring
+NAME                                     READY   STATUS    RESTARTS   AGE
+otel-collector-57bb996885-24sw2          1/1     Running   0          82m
+prometheus-deployment-598df487b6-bxm7t   1/1     Running   0          157m
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get svc -n monitoring
+NAME                 TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)                                                                                AGE
+otel-collector       ClusterIP      10.3.245.171   <none>          4317/TCP,14250/TCP,14268/TCP,9411/TCP,8888/TCP,8889/TCP,55680/TCP,1888/TCP,55678/TCP   82m
+prometheus-service   LoadBalancer   10.3.250.147   35.236.28.244   8086:30153/TCP                                                                         16h
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get sa -n monitoring
+NAME      SECRETS   AGE
+default   1         24h
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get po -n kube-system
+NAME                                               READY   STATUS    RESTARTS   AGE
+event-exporter-gke-67986489c8-mgsx7                2/2     Running   0          24h
+fluentbit-gke-5wzx2                                2/2     Running   0          24h
+fluentbit-gke-bx4np                                2/2     Running   0          24h
+fluentbit-gke-gxzbc                                2/2     Running   0          24h
+gke-metrics-agent-7z4q6                            1/1     Running   0          24h
+gke-metrics-agent-85pjw                            1/1     Running   0          24h
+gke-metrics-agent-qgvcz                            1/1     Running   0          24h
+konnectivity-agent-8665d4fccf-5g8sb                1/1     Running   0          24h
+konnectivity-agent-8665d4fccf-tn642                1/1     Running   0          24h
+konnectivity-agent-8665d4fccf-wvwzg                1/1     Running   0          24h
+konnectivity-agent-autoscaler-6cb774c9cc-jrk6g     1/1     Running   0          24h
+kube-dns-autoscaler-844c9d9448-qtnrx               1/1     Running   0          24h
+kube-dns-b4f5c58c7-hgx54                           4/4     Running   0          24h
+kube-dns-b4f5c58c7-qdgt9                           4/4     Running   0          24h
+kube-proxy-gke-mytest-default-pool-0ba417c2-grf1   1/1     Running   0          24h
+kube-proxy-gke-mytest-default-pool-0ba417c2-ht8l   1/1     Running   0          24h
+kube-proxy-gke-mytest-default-pool-0ba417c2-rjzl   1/1     Running   0          24h
+kube-state-metrics-79cff5689d-z7vt5                1/1     Running   0          24h
+l7-default-backend-56cb9644f6-7674j                1/1     Running   0          24h
+metrics-server-v0.3.6-9c5bbf784-qnh85              2/2     Running   0          24h
+pdcsi-node-dxznv                                   2/2     Running   0          24h
+pdcsi-node-jlf9x                                   2/2     Running   0          24h
+pdcsi-node-zbwqc                                   2/2     Running   0          24h
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get pvc -n monitoring
+NAME               STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+prometheus-claim   Bound    pvc-971163a5-fcbe-4537-897c-9240cd68be21   30Gi       RWO            standard       18h

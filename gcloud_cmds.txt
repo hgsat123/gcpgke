@@ -1,0 +1,43 @@
+https://cloud.google.com/stackdriver/docs/solutions/gke/prometheus
+
+
+gcloud container clusters create NAME [--accelerator=[type=TYPE,[count=COUNT],…]] [--additional-zones=ZONE,[ZONE,…]] [--addons=[ADDON,…]] [--async] [--autoscaling-profile=AUTOSCALING_PROFILE] [--boot-disk-kms-key=BOOT_DISK_KMS_KEY] [--cloud-run-config=[load-balancer-type=EXTERNAL,…]] [--cluster-ipv4-cidr=CLUSTER_IPV4_CIDR] [--cluster-secondary-range-name=NAME] [--cluster-version=CLUSTER_VERSION] [--create-subnetwork=[KEY=VALUE,…]] [--database-encryption-key=DATABASE_ENCRYPTION_KEY] [--default-max-pods-per-node=DEFAULT_MAX_PODS_PER_NODE] [--disable-default-snat] [--disk-size=DISK_SIZE] [--disk-type=DISK_TYPE] [--enable-autorepair] [--no-enable-autoupgrade] [--enable-binauthz] [--enable-cloud-logging] [--enable-cloud-monitoring] [--enable-cloud-run-alpha] [--enable-dataplane-v2] [--enable-gvnic] [--enable-intra-node-visibility] [--enable-ip-alias] [--enable-kubernetes-alpha] [--enable-l4-ilb-subsetting] [--enable-legacy-authorization] [--enable-master-global-access] [--enable-network-policy] [--enable-shielded-nodes] [--enable-stackdriver-kubernetes] [--enable-vertical-pod-autoscaling] [--image-type=IMAGE_TYPE] [--issue-client-certificate] [--labels=[KEY=VALUE,…]] [--local-ssd-count=LOCAL_SSD_COUNT] [--logging=[COMPONENT,…]] [--machine-type=MACHINE_TYPE, -m MACHINE_TYPE] [--max-nodes-per-pool=MAX_NODES_PER_POOL] [--max-pods-per-node=MAX_PODS_PER_NODE] [--max-surge-upgrade=MAX_SURGE_UPGRADE] [--max-unavailable-upgrade=MAX_UNAVAILABLE_UPGRADE] [--metadata=KEY=VALUE,[KEY=VALUE,…]] [--metadata-from-file=KEY=LOCAL_FILE_PATH,[…]] [--min-cpu-platform=PLATFORM] [--monitoring=[COMPONENT,…]] [--network=NETWORK] [--node-labels=[NODE_LABEL,…]] [--node-locations=ZONE,[ZONE,…]] [--node-taints=[NODE_TAINT,…]] [--node-version=NODE_VERSION] [--notification-config=[pubsub=ENABLED|DISABLED,pubsub-topic=TOPIC,…]] [--num-nodes=NUM_NODES; default=3] [--preemptible] [--private-ipv6-google-access-type=PRIVATE_IPV6_GOOGLE_ACCESS_TYPE] [--release-channel=CHANNEL] [--security-group=SECURITY_GROUP] [--services-ipv4-cidr=CIDR] [--services-secondary-range-name=NAME] [--shielded-integrity-monitoring] [--shielded-secure-boot] [--subnetwork=SUBNETWORK] [--system-config-from-file=SYSTEM_CONFIG_FROM_FILE] [--tags=TAG,[TAG,…]] [--threads-per-core=THREADS_PER_CORE] [--workload-metadata=WORKLOAD_METADATA] [--workload-pool=WORKLOAD_POOL] [[--enable-autoprovisioning : --autoprovisioning-config-file=AUTOPROVISIONING_CONFIG_FILE | [--max-cpu=MAX_CPU --max-memory=MAX_MEMORY : --autoprovisioning-image-type=AUTOPROVISIONING_IMAGE_TYPE --autoprovisioning-locations=ZONE,[ZONE,…] --autoprovisioning-min-cpu-platform=PLATFORM --min-cpu=MIN_CPU --min-memory=MIN_MEMORY --autoprovisioning-max-surge-upgrade=AUTOPROVISIONING_MAX_SURGE_UPGRADE --autoprovisioning-max-unavailable-upgrade=AUTOPROVISIONING_MAX_UNAVAILABLE_UPGRADE --autoprovisioning-scopes=[SCOPE,…] --autoprovisioning-service-account=AUTOPROVISIONING_SERVICE_ACCOUNT --enable-autoprovisioning-autorepair --enable-autoprovisioning-autoupgrade [--max-accelerator=[type=TYPE,count=COUNT,…] : --min-accelerator=[type=TYPE,count=COUNT,…]]]]] [--enable-autoscaling --max-nodes=MAX_NODES --min-nodes=MIN_NODES] [--enable-master-authorized-networks --master-authorized-networks=NETWORK,[NETWORK,…]] [--enable-network-egress-metering --enable-resource-consumption-metering --resource-usage-bigquery-dataset=RESOURCE_USAGE_BIGQUERY_DATASET] [--enable-private-endpoint --enable-private-nodes --master-ipv4-cidr=MASTER_IPV4_CIDR] [--enable-tpu --tpu-ipv4-cidr=CIDR] [--maintenance-window=START_TIME     | --maintenance-window-end=TIME_STAMP --maintenance-window-recurrence=RRULE --maintenance-window-start=TIME_STAMP] [--password=PASSWORD --enable-basic-auth     | --username=USERNAME, -u USERNAME] [--region=REGION     | --zone=ZONE, -z ZONE] [--reservation=RESERVATION --reservation-affinity=RESERVATION_AFFINITY] [--scopes=[SCOPE,…]; default="gke-default" --service-account=SERVICE_ACCOUNT] [GCLOUD_WIDE_FLAG …]
+
+
+gcloud container clusters create gke \
+    --zone us-west2-a \
+    --num-nodes 3 \
+    --machine-type n1-standard-2 \
+    --verbosity=none --async
+
+gcloud container clusters create onprem \
+    --zone us-east4-a \
+    --num-nodes 3 \
+    --machine-type n1-standard-2 \
+    --logging=NONE \
+    --monitoring=NONE \
+    --verbosity=none
+
+gcloud container clusters list
+
+Configure cluster connections and access
+============
+gcloud container clusters get-credentials gke --zone us-west2-a --project ${PROJECT_ID}
+gcloud container clusters get-credentials onprem --zone us-east4-a --project ${PROJECT_ID}
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ gcloud container clusters get-credentials mytest --zone us-west2-a --project ${PROJECT_ID}
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for mytest.
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ echo $PROJECT_ID
+my-project-64389
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi

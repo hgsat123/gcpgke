@@ -1,0 +1,922 @@
+New customers get $300 in free credits to spend on Google Cloud. All customers get a general purpose machine 
+(e2-micro instance) per month for free, not charged against your credits.
+
+====
+hgsat123@cloudshell:~$ gcloud config set project my-project-64389
+Updated property [core/project].
+
+
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud auth application-default login
+
+You are running on a Google Compute Engine virtual machine.
+The service credentials associated with this virtual machine
+will automatically be used by Application Default
+Credentials, so it is not necessary to use this command.
+
+If you decide to proceed anyway, your user credentials may be visible
+to others with access to this virtual machine. Are you sure you want
+to authenticate with your personal account?
+
+Do you want to continue (Y/n)?  Y
+
+Go to the following link in your browser:
+
+    https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&scope=openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Faccounts.reauth&state=nk9MhtoRtNX3BaPRn17nAcH4DaHoMK&prompt=consent&access_type=offline&code_challenge=H06and1A7W7nfjsvgGjkc0YcmHKMBPIKIuVUnjLDLyk&code_challenge_method=S256
+
+Enter verification code: 4/1AX4XfWhTXAudewrln1MBJ_H68lb5DfhVxP5OcS3Fo9jToXHEOP6UZouynAQ
+
+Credentials saved to file: [/tmp/tmp.PskgA3VS1l/application_default_credentials.json]
+
+These credentials will be used by any library that requests Application Default Credentials (ADC).
+
+Quota project "my-project-64389" was added to ADC which can be used by Google client libraries for billing and quota. Note that some services may still bill the project owning the resource.
+hgsat123@cloudshell:~ (my-project-64389)$
+
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud compute project-info add-metadata --metadata google-compute-default-region=us-west2,google-compute-default-zone=us-west2-a
+No change requested; skipping update for [my-project-64389].
+
+hgsat123@cloudshell:~ (my-project-64389)$ export CLOUDSDK_COMPUTE_REGION=us-west2
+hgsat123@cloudshell:~ (my-project-64389)$ export CLOUDSDK_COMPUTE_ZONE=us-west2-a
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud config set compute/region us-west2
+WARNING: Property [region] is overridden by environment setting [CLOUDSDK_COMPUTE_REGION=us-west2]
+Updated property [compute/region].
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud config set compute/zone us-west2-a
+WARNING: Property [zone] is overridden by environment setting [CLOUDSDK_COMPUTE_ZONE=us-west2-a]
+Updated property [compute/zone].
+
+---- create GKE --- cluster
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud container clusters create mytest --num-nodes 3
+WARNING: Starting in January 2021, clusters will use the Regular release channel by default when `--cluster-version`, `--release-channel`, `--no-enable-autoupgrade`, and `--no-enable-autorepair` flags are not specified.
+WARNING: Currently VPC-native is the default mode during cluster creation for versions greater than 1.21.0-gke.1500. To create advanced routes based clusters, please pass the `--no-enable-ip-alias` flag
+WARNING: Starting with version 1.18, clusters will have shielded GKE nodes by default.
+WARNING: Your Pod address range (`--cluster-ipv4-cidr`) can accommodate at most 1008 node(s).
+WARNING: Starting with version 1.19, newly created clusters and node-pools will have COS_CONTAINERD as the default node image when no image type is specified.
+Creating cluster mytest in us-west2-a...done.     
+Created [https://container.googleapis.com/v1/projects/my-project-64389/zones/us-west2-a/clusters/mytest].
+To inspect the contents of your cluster, go to: https://console.cloud.google.com/kubernetes/workload_/gcloud/us-west2-a/mytest?project=my-project-64389
+kubeconfig entry generated for mytest.
+NAME: mytest
+LOCATION: us-west2-a
+MASTER_VERSION: 1.20.10-gke.1600
+MASTER_IP: 34.94.242.194
+MACHINE_TYPE: e2-medium
+NODE_VERSION: 1.20.10-gke.1600
+NUM_NODES: 3
+STATUS: RUNNING
+===
+
+hgsat123@cloudshell:~ (my-project-64389)$hgsat123@cloudshell:~ (my-project-64389)$ gcloud container clusters get-credentials mytest
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for mytest.
+
+hgsat123@cloudshell:~ (my-project-64389)$ export CURRENT_CONTEXT=$(kubectl config current-context) && export CURRENT_CLUSTER=$(kubectl config view -o go-template="{{\$curr_context := \"$CURRENT_CONTEXT\" }}{{range .contexts}}{{if eq .name \$curr_context}}{{.context.cluster}}{{end}}{{end}}") && echo $(kubectl config view -o go-template="{{\$cluster_context := \"$CURRENT_CLUSTER\"}}{{range .clusters}}{{if eq .name \$cluster_context}}{{.cluster.server}}{{end}}{{end}}")
+https://34.94.242.194
+
+hgsat123@cloudshell:~ (my-project-64389)$ echo $CURRENT_CONTEXT
+gke_my-project-64389_us-west2-a_mytest
+hgsat123@cloudshell:~ (my-project-64389)$
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get nodesNAME                                    STATUS   ROLES    AGE   VERSION
+gke-mytest-default-pool-24d50f56-8f0r   Ready    <none>   10m   v1.20.10-gke.1600
+gke-mytest-default-pool-24d50f56-fbm7   Ready    <none>   10m   v1.20.10-gke.1600
+gke-mytest-default-pool-24d50f56-mckr   Ready    <none>   10m   v1.20.10-gke.1600
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl describe nodesName:               gke-mytest-default-pool-24d50f56-8f0rRoles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64                    beta.kubernetes.io/instance-type=e2-medium
+                    beta.kubernetes.io/os=linux
+                    cloud.google.com/gke-boot-disk=pd-standard
+                    cloud.google.com/gke-container-runtime=containerd
+                    cloud.google.com/gke-nodepool=default-pool
+                    cloud.google.com/gke-os-distribution=cos
+                    cloud.google.com/machine-family=e2
+                    failure-domain.beta.kubernetes.io/region=us-west2
+                    failure-domain.beta.kubernetes.io/zone=us-west2-a
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=gke-mytest-default-pool-24d50f56-8f0r
+                    kubernetes.io/os=linux
+                    node.kubernetes.io/instance-type=e2-medium
+                    topology.gke.io/zone=us-west2-a
+                    topology.kubernetes.io/region=us-west2
+                    topology.kubernetes.io/zone=us-west2-a
+Annotations:        container.googleapis.com/instance_id: 2941125686906151764
+                    csi.volume.kubernetes.io/nodeid:
+                      {"pd.csi.storage.gke.io":"projects/my-project-64389/zones/us-west2-a/instances/gke-mytest-default-pool-24d50f56-8f0r"}
+                    node.alpha.kubernetes.io/ttl: 0
+                    node.gke.io/last-applied-node-labels:
+                      cloud.google.com/gke-boot-disk=pd-standard,cloud.google.com/gke-container-runtime=containerd,cloud.google.com/gke-nodepool=default-pool,cl...
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Sat, 30 Oct 2021 05:55:12 +0000
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  gke-mytest-default-pool-24d50f56-8f0r
+  AcquireTime:     <unset>
+  RenewTime:       Sat, 30 Oct 2021 06:06:47 +0000
+Conditions:
+  Type                          Status  LastHeartbeatTime                 LastTransitionTime                Reason                          Message
+  ----                          ------  -----------------                 ------------------                ------                          -------
+  CorruptDockerOverlay2         False   Sat, 30 Oct 2021 06:05:16 +0000   Sat, 30 Oct 2021 05:55:14 +0000   NoCorruptDockerOverlay2         docker overlay2 is functioning properly
+  FrequentUnregisterNetDevice   False   Sat, 30 Oct 2021 06:05:16 +0000   Sat, 30 Oct 2021 05:55:14 +0000   NoFrequentUnregisterNetDevice   node is functioning properly
+  FrequentKubeletRestart        False   Sat, 30 Oct 2021 06:05:16 +0000   Sat, 30 Oct 2021 05:55:14 +0000   NoFrequentKubeletRestart        kubelet is functioning properly
+  FrequentDockerRestart         False   Sat, 30 Oct 2021 06:05:16 +0000   Sat, 30 Oct 2021 05:55:14 +0000   NoFrequentDockerRestart         docker is functioning properly
+  FrequentContainerdRestart     False   Sat, 30 Oct 2021 06:05:16 +0000   Sat, 30 Oct 2021 05:55:14 +0000   NoFrequentContainerdRestart     containerd is functioning properly
+  KernelDeadlock                False   Sat, 30 Oct 2021 06:05:16 +0000   Sat, 30 Oct 2021 05:55:14 +0000   KernelHasNoDeadlock             kernel has no deadlock
+  ReadonlyFilesystem            False   Sat, 30 Oct 2021 06:05:16 +0000   Sat, 30 Oct 2021 05:55:14 +0000   FilesystemIsNotReadOnly         Filesystem is not read-only
+  NetworkUnavailable            False   Sat, 30 Oct 2021 05:55:26 +0000   Sat, 30 Oct 2021 05:55:26 +0000   RouteCreated                    RouteController created a route
+  MemoryPressure                False   Sat, 30 Oct 2021 06:06:15 +0000   Sat, 30 Oct 2021 05:55:03 +0000   KubeletHasSufficientMemory      kubelet has sufficient memory available
+  DiskPressure                  False   Sat, 30 Oct 2021 06:06:15 +0000   Sat, 30 Oct 2021 05:55:03 +0000   KubeletHasNoDiskPressure        kubelet has no disk pressure
+  PIDPressure                   False   Sat, 30 Oct 2021 06:06:15 +0000   Sat, 30 Oct 2021 05:55:03 +0000   KubeletHasSufficientPID         kubelet has sufficient PID available
+  Ready                         True    Sat, 30 Oct 2021 06:06:15 +0000   Sat, 30 Oct 2021 05:55:26 +0000   KubeletReady                    kubelet is posting ready status. AppArmor enabled
+Addresses:
+  InternalIP:   10.168.0.5
+  ExternalIP:   34.102.1.47
+  InternalDNS:  gke-mytest-default-pool-24d50f56-8f0r.us-west2-a.c.my-project-64389.internal
+  Hostname:     gke-mytest-default-pool-24d50f56-8f0r.us-west2-a.c.my-project-64389.internal
+Capacity:
+  attachable-volumes-gce-pd:  15
+  cpu:                        2
+  ephemeral-storage:          98868448Ki
+  hugepages-1Gi:              0
+  hugepages-2Mi:              0
+  memory:                     4031636Ki
+  pods:                       110
+Allocatable:
+  attachable-volumes-gce-pd:  15
+  cpu:                        940m
+  ephemeral-storage:          47093746742
+  hugepages-1Gi:              0
+  hugepages-2Mi:              0
+  memory:                     2885780Ki
+  pods:                       110
+System Info:
+  Machine ID:                 7eb0417bbf75b22689564f86caeef81f
+  System UUID:                7eb0417b-bf75-b226-8956-4f86caeef81f
+  Boot ID:                    c58f9ca0-1a2e-492d-886e-55f813c248c8
+  Kernel Version:             5.4.120+
+  OS Image:                   Container-Optimized OS from Google
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://1.4.4
+  Kubelet Version:            v1.20.10-gke.1600
+  Kube-Proxy Version:         v1.20.10-gke.1600
+PodCIDR:                      10.0.0.0/24
+PodCIDRs:                     10.0.0.0/24
+ProviderID:                   gce://my-project-64389/us-west2-a/gke-mytest-default-pool-24d50f56-8f0r
+Non-terminated Pods:          (6 in total)
+  Namespace                   Name                                                CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                                ------------  ----------  ---------------  -------------  ---
+  kube-system                 fluentbit-gke-nq5md                                 100m (10%)    0 (0%)      200Mi (7%)       500Mi (17%)    11m
+  kube-system                 gke-metrics-agent-q9rsg                             3m (0%)       0 (0%)      50Mi (1%)        50Mi (1%)      11m
+  kube-system                 konnectivity-agent-5bd758f4cf-wqfb7                 0 (0%)        0 (0%)      30Mi (1%)        30Mi (1%)      11m
+  kube-system                 kube-dns-b4f5c58c7-b7jz9                            260m (27%)    0 (0%)      110Mi (3%)       210Mi (7%)     11m
+  kube-system                 kube-proxy-gke-mytest-default-pool-24d50f56-8f0r    100m (10%)    0 (0%)      0 (0%)           0 (0%)         10m
+  kube-system                 pdcsi-node-fnfvn                                    10m (1%)      0 (0%)      20Mi (0%)        100Mi (3%)     11m
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource                   Requests     Limits
+  --------                   --------     ------
+  cpu                        473m (50%)   0 (0%)
+  memory                     410Mi (14%)  890Mi (31%)
+  ephemeral-storage          0 (0%)       0 (0%)
+  hugepages-1Gi              0 (0%)       0 (0%)
+  hugepages-2Mi              0 (0%)       0 (0%)
+  attachable-volumes-gce-pd  0            0
+Events:
+  Type     Reason                   Age                From             Message
+  ----     ------                   ----               ----             -------
+  Normal   Starting                 13m                kubelet          Starting kubelet.
+  Warning  InvalidDiskCapacity      13m                kubelet          invalid capacity 0 on image filesystem
+  Normal   NodeAllocatableEnforced  13m                kubelet          Updated Node Allocatable limit across pods
+  Normal   NodeHasNoDiskPressure    13m (x7 over 13m)  kubelet          Node gke-mytest-default-pool-24d50f56-8f0r status is now: NodeHasNoDiskPressure
+  Normal   NodeHasSufficientPID     13m (x7 over 13m)  kubelet          Node gke-mytest-default-pool-24d50f56-8f0r status is now: NodeHasSufficientPID
+  Normal   NodeHasSufficientMemory  13m (x8 over 13m)  kubelet          Node gke-mytest-default-pool-24d50f56-8f0r status is now: NodeHasSufficientMemory
+  Normal   Starting                 11m                kube-proxy       Starting kube-proxy.
+  Warning  ContainerdStart          11m (x2 over 11m)  systemd-monitor  Starting containerd container runtime...
+  Warning  DockerStart              11m (x3 over 11m)  systemd-monitor  Starting Docker Application Container Engine...
+  Warning  KubeletStart             11m                systemd-monitor  Started Kubernetes kubelet.
+  Warning  NodeSysctlChange         11m                sysctl-monitor   {"unmanaged": {"net.netfilter.nf_conntrack_buckets": "32768"}}
+
+
+Name:               gke-mytest-default-pool-24d50f56-fbm7
+Roles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=e2-medium
+                    beta.kubernetes.io/os=linux
+                    cloud.google.com/gke-boot-disk=pd-standard
+                    cloud.google.com/gke-container-runtime=containerd
+                    cloud.google.com/gke-nodepool=default-pool
+                    cloud.google.com/gke-os-distribution=cos
+                    cloud.google.com/machine-family=e2
+                    failure-domain.beta.kubernetes.io/region=us-west2
+                    failure-domain.beta.kubernetes.io/zone=us-west2-a
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=gke-mytest-default-pool-24d50f56-fbm7
+                    kubernetes.io/os=linux
+                    node.kubernetes.io/instance-type=e2-medium
+                    topology.gke.io/zone=us-west2-a
+                    topology.kubernetes.io/region=us-west2
+                    topology.kubernetes.io/zone=us-west2-a
+Annotations:        container.googleapis.com/instance_id: 1088906940128518996
+                    csi.volume.kubernetes.io/nodeid:
+                      {"pd.csi.storage.gke.io":"projects/my-project-64389/zones/us-west2-a/instances/gke-mytest-default-pool-24d50f56-fbm7"}
+                    node.alpha.kubernetes.io/ttl: 0
+                    node.gke.io/last-applied-node-labels:
+                      cloud.google.com/gke-boot-disk=pd-standard,cloud.google.com/gke-container-runtime=containerd,cloud.google.com/gke-nodepool=default-pool,cl...
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Sat, 30 Oct 2021 05:55:12 +0000
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  gke-mytest-default-pool-24d50f56-fbm7
+  AcquireTime:     <unset>
+  RenewTime:       Sat, 30 Oct 2021 06:06:46 +0000
+Conditions:
+  Type                          Status  LastHeartbeatTime                 LastTransitionTime                Reason                          Message
+  ----                          ------  -----------------                 ------------------                ------                          -------
+  CorruptDockerOverlay2         False   Sat, 30 Oct 2021 06:05:17 +0000   Sat, 30 Oct 2021 05:55:15 +0000   NoCorruptDockerOverlay2         docker overlay2 is functioning properly
+  FrequentUnregisterNetDevice   False   Sat, 30 Oct 2021 06:05:17 +0000   Sat, 30 Oct 2021 05:55:15 +0000   NoFrequentUnregisterNetDevice   node is functioning properly
+  FrequentKubeletRestart        False   Sat, 30 Oct 2021 06:05:17 +0000   Sat, 30 Oct 2021 05:55:16 +0000   NoFrequentKubeletRestart        kubelet is functioning properly
+  FrequentDockerRestart         False   Sat, 30 Oct 2021 06:05:17 +0000   Sat, 30 Oct 2021 05:55:16 +0000   NoFrequentDockerRestart         docker is functioning properly
+  FrequentContainerdRestart     False   Sat, 30 Oct 2021 06:05:17 +0000   Sat, 30 Oct 2021 05:55:16 +0000   NoFrequentContainerdRestart     containerd is functioning properly
+  KernelDeadlock                False   Sat, 30 Oct 2021 06:05:17 +0000   Sat, 30 Oct 2021 05:55:15 +0000   KernelHasNoDeadlock             kernel has no deadlock
+  ReadonlyFilesystem            False   Sat, 30 Oct 2021 06:05:17 +0000   Sat, 30 Oct 2021 05:55:15 +0000   FilesystemIsNotReadOnly         Filesystem is not read-only
+  NetworkUnavailable            False   Sat, 30 Oct 2021 05:55:26 +0000   Sat, 30 Oct 2021 05:55:26 +0000   RouteCreated                    RouteController created a route
+  MemoryPressure                False   Sat, 30 Oct 2021 06:06:45 +0000   Sat, 30 Oct 2021 05:54:59 +0000   KubeletHasSufficientMemory      kubelet has sufficient memory available
+  DiskPressure                  False   Sat, 30 Oct 2021 06:06:45 +0000   Sat, 30 Oct 2021 05:54:59 +0000   KubeletHasNoDiskPressure        kubelet has no disk pressure
+  PIDPressure                   False   Sat, 30 Oct 2021 06:06:45 +0000   Sat, 30 Oct 2021 05:54:59 +0000   KubeletHasSufficientPID         kubelet has sufficient PID available
+  Ready                         True    Sat, 30 Oct 2021 06:06:45 +0000   Sat, 30 Oct 2021 05:55:12 +0000   KubeletReady                    kubelet is posting ready status. AppArmor enabled
+Addresses:
+  InternalIP:   10.168.0.6
+  ExternalIP:   35.236.28.244
+  InternalDNS:  gke-mytest-default-pool-24d50f56-fbm7.us-west2-a.c.my-project-64389.internal
+  Hostname:     gke-mytest-default-pool-24d50f56-fbm7.us-west2-a.c.my-project-64389.internal
+Capacity:
+  attachable-volumes-gce-pd:  15
+  cpu:                        2
+  ephemeral-storage:          98868448Ki
+  hugepages-1Gi:              0
+  hugepages-2Mi:              0
+  memory:                     4031628Ki
+  pods:                       110
+Allocatable:
+  attachable-volumes-gce-pd:  15
+  cpu:                        940m
+  ephemeral-storage:          47093746742
+  hugepages-1Gi:              0
+  hugepages-2Mi:              0
+  memory:                     2885772Ki
+  pods:                       110
+System Info:
+  Machine ID:                 fa2fb6703a0e7afec97f4b800b5d0888
+  System UUID:                fa2fb670-3a0e-7afe-c97f-4b800b5d0888
+  Boot ID:                    f4759c26-a1b5-42d0-98b6-6f05936b69a8
+  Kernel Version:             5.4.120+
+  OS Image:                   Container-Optimized OS from Google
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://1.4.4
+  Kubelet Version:            v1.20.10-gke.1600
+  Kube-Proxy Version:         v1.20.10-gke.1600
+PodCIDR:                      10.0.1.0/24
+PodCIDRs:                     10.0.1.0/24
+ProviderID:                   gce://my-project-64389/us-west2-a/gke-mytest-default-pool-24d50f56-fbm7
+Non-terminated Pods:          (9 in total)
+  Namespace                   Name                                                CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                                ------------  ----------  ---------------  -------------  ---
+  kube-system                 event-exporter-gke-67986489c8-fs6kx                 0 (0%)        0 (0%)      0 (0%)           0 (0%)         11m
+  kube-system                 fluentbit-gke-6wrnx                                 100m (10%)    0 (0%)      200Mi (7%)       500Mi (17%)    11m
+  kube-system                 gke-metrics-agent-7h8tx                             3m (0%)       0 (0%)      50Mi (1%)        50Mi (1%)      11m
+  kube-system                 konnectivity-agent-5bd758f4cf-p5nxp                 0 (0%)        0 (0%)      30Mi (1%)        30Mi (1%)      11m
+  kube-system                 kube-dns-autoscaler-844c9d9448-4bw2g                20m (2%)      0 (0%)      10Mi (0%)        0 (0%)         11m
+  kube-system                 kube-proxy-gke-mytest-default-pool-24d50f56-fbm7    100m (10%)    0 (0%)      0 (0%)           0 (0%)         10m
+  kube-system                 l7-default-backend-56cb9644f6-pnghj                 10m (1%)      10m (1%)    20Mi (0%)        20Mi (0%)      11m
+  kube-system                 metrics-server-v0.3.6-9c5bbf784-b45sj               48m (5%)      143m (15%)  105Mi (3%)       355Mi (12%)    10m
+  kube-system                 pdcsi-node-xz4m9                                    10m (1%)      0 (0%)      20Mi (0%)        100Mi (3%)     11m
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource                   Requests     Limits
+  --------                   --------     ------
+  cpu                        291m (30%)   153m (16%)
+  memory                     435Mi (15%)  1055Mi (37%)
+  ephemeral-storage          0 (0%)       0 (0%)
+  hugepages-1Gi              0 (0%)       0 (0%)
+  hugepages-2Mi              0 (0%)       0 (0%)
+  attachable-volumes-gce-pd  0            0
+Events:
+  Type     Reason                   Age                From             Message
+  ----     ------                   ----               ----             -------
+  Normal   Starting                 13m                kubelet          Starting kubelet.
+  Warning  InvalidDiskCapacity      13m                kubelet          invalid capacity 0 on image filesystem
+  Normal   NodeAllocatableEnforced  13m                kubelet          Updated Node Allocatable limit across pods
+  Normal   NodeHasSufficientMemory  13m (x7 over 13m)  kubelet          Node gke-mytest-default-pool-24d50f56-fbm7 status is now: NodeHasSufficientMemory
+  Normal   NodeHasNoDiskPressure    13m (x7 over 13m)  kubelet          Node gke-mytest-default-pool-24d50f56-fbm7 status is now: NodeHasNoDiskPressure
+  Normal   NodeHasSufficientPID     13m (x8 over 13m)  kubelet          Node gke-mytest-default-pool-24d50f56-fbm7 status is now: NodeHasSufficientPID
+  Normal   Starting                 11m                kube-proxy       Starting kube-proxy.
+  Warning  ContainerdStart          11m (x2 over 11m)  systemd-monitor  Starting containerd container runtime...
+  Warning  DockerStart              11m (x3 over 11m)  systemd-monitor  Starting Docker Application Container Engine...
+  Warning  KubeletStart             11m                systemd-monitor  Started Kubernetes kubelet.
+  Warning  NodeSysctlChange         11m                sysctl-monitor   {"unmanaged": {"net.netfilter.nf_conntrack_buckets": "32768"}}
+
+
+Name:               gke-mytest-default-pool-24d50f56-mckr
+Roles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=e2-medium
+                    beta.kubernetes.io/os=linux
+                    cloud.google.com/gke-boot-disk=pd-standard
+                    cloud.google.com/gke-container-runtime=containerd
+                    cloud.google.com/gke-nodepool=default-pool
+                    cloud.google.com/gke-os-distribution=cos
+                    cloud.google.com/machine-family=e2
+                    failure-domain.beta.kubernetes.io/region=us-west2
+                    failure-domain.beta.kubernetes.io/zone=us-west2-a
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=gke-mytest-default-pool-24d50f56-mckr
+                    kubernetes.io/os=linux
+                    node.kubernetes.io/instance-type=e2-medium
+                    topology.gke.io/zone=us-west2-a
+                    topology.kubernetes.io/region=us-west2
+                    topology.kubernetes.io/zone=us-west2-a
+Annotations:        container.googleapis.com/instance_id: 224077728474817364
+                    csi.volume.kubernetes.io/nodeid:
+                      {"pd.csi.storage.gke.io":"projects/my-project-64389/zones/us-west2-a/instances/gke-mytest-default-pool-24d50f56-mckr"}
+                    node.alpha.kubernetes.io/ttl: 0
+                    node.gke.io/last-applied-node-labels:
+                      cloud.google.com/gke-boot-disk=pd-standard,cloud.google.com/gke-container-runtime=containerd,cloud.google.com/gke-nodepool=default-pool,cl...
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Sat, 30 Oct 2021 05:55:13 +0000
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  gke-mytest-default-pool-24d50f56-mckr
+  AcquireTime:     <unset>
+  RenewTime:       Sat, 30 Oct 2021 06:06:56 +0000
+Conditions:
+  Type                          Status  LastHeartbeatTime                 LastTransitionTime                Reason                          Message
+  ----                          ------  -----------------                 ------------------                ------                          -------
+  FrequentUnregisterNetDevice   False   Sat, 30 Oct 2021 06:05:18 +0000   Sat, 30 Oct 2021 05:55:16 +0000   NoFrequentUnregisterNetDevice   node is functioning properly
+  FrequentKubeletRestart        False   Sat, 30 Oct 2021 06:05:18 +0000   Sat, 30 Oct 2021 05:55:16 +0000   NoFrequentKubeletRestart        kubelet is functioning properly
+  FrequentDockerRestart         False   Sat, 30 Oct 2021 06:05:18 +0000   Sat, 30 Oct 2021 05:55:16 +0000   NoFrequentDockerRestart         docker is functioning properly
+  FrequentContainerdRestart     False   Sat, 30 Oct 2021 06:05:18 +0000   Sat, 30 Oct 2021 05:55:16 +0000   NoFrequentContainerdRestart     containerd is functioning properly
+  KernelDeadlock                False   Sat, 30 Oct 2021 06:05:18 +0000   Sat, 30 Oct 2021 05:55:16 +0000   KernelHasNoDeadlock             kernel has no deadlock
+  ReadonlyFilesystem            False   Sat, 30 Oct 2021 06:05:18 +0000   Sat, 30 Oct 2021 05:55:16 +0000   FilesystemIsNotReadOnly         Filesystem is not read-only
+  CorruptDockerOverlay2         False   Sat, 30 Oct 2021 06:05:18 +0000   Sat, 30 Oct 2021 05:55:16 +0000   NoCorruptDockerOverlay2         docker overlay2 is functioning properly
+  NetworkUnavailable            False   Sat, 30 Oct 2021 05:55:26 +0000   Sat, 30 Oct 2021 05:55:26 +0000   RouteCreated                    RouteController created a route
+  MemoryPressure                False   Sat, 30 Oct 2021 06:06:48 +0000   Sat, 30 Oct 2021 05:55:04 +0000   KubeletHasSufficientMemory      kubelet has sufficient memory available
+  DiskPressure                  False   Sat, 30 Oct 2021 06:06:48 +0000   Sat, 30 Oct 2021 05:55:04 +0000   KubeletHasNoDiskPressure        kubelet has no disk pressure
+  PIDPressure                   False   Sat, 30 Oct 2021 06:06:48 +0000   Sat, 30 Oct 2021 05:55:04 +0000   KubeletHasSufficientPID         kubelet has sufficient PID available
+  Ready                         True    Sat, 30 Oct 2021 06:06:48 +0000   Sat, 30 Oct 2021 05:55:33 +0000   KubeletReady                    kubelet is posting ready status. AppArmor enabled
+Addresses:
+  InternalIP:   10.168.0.7
+  ExternalIP:   34.94.55.24
+  InternalDNS:  gke-mytest-default-pool-24d50f56-mckr.us-west2-a.c.my-project-64389.internal
+  Hostname:     gke-mytest-default-pool-24d50f56-mckr.us-west2-a.c.my-project-64389.internal
+Capacity:
+  attachable-volumes-gce-pd:  15
+  cpu:                        2
+  ephemeral-storage:          98868448Ki
+  hugepages-1Gi:              0
+  hugepages-2Mi:              0
+  memory:                     4031628Ki
+  pods:                       110
+Allocatable:
+  attachable-volumes-gce-pd:  15
+  cpu:                        940m
+  ephemeral-storage:          47093746742
+  hugepages-1Gi:              0
+  hugepages-2Mi:              0
+  memory:                     2885772Ki
+  pods:                       110
+System Info:
+  Machine ID:                 66f92d6a22b55f7741d07adf6aab3c7e
+  System UUID:                66f92d6a-22b5-5f77-41d0-7adf6aab3c7e
+  Boot ID:                    7cc9e479-a3c8-44bf-9e78-cc58c861dfff
+  Kernel Version:             5.4.120+
+  OS Image:                   Container-Optimized OS from Google
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://1.4.4
+  Kubelet Version:            v1.20.10-gke.1600
+  Kube-Proxy Version:         v1.20.10-gke.1600
+PodCIDR:                      10.0.2.0/24
+PodCIDRs:                     10.0.2.0/24
+ProviderID:                   gce://my-project-64389/us-west2-a/gke-mytest-default-pool-24d50f56-mckr
+Non-terminated Pods:          (7 in total)
+  Namespace                   Name                                                CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                                ------------  ----------  ---------------  -------------  ---
+  kube-system                 fluentbit-gke-hlbkp                                 100m (10%)    0 (0%)      200Mi (7%)       500Mi (17%)    11m
+  kube-system                 gke-metrics-agent-wtttw                             3m (0%)       0 (0%)      50Mi (1%)        50Mi (1%)      11m
+  kube-system                 konnectivity-agent-5bd758f4cf-hvcwp                 0 (0%)        0 (0%)      30Mi (1%)        30Mi (1%)      11m
+  kube-system                 konnectivity-agent-autoscaler-6cb774c9cc-phpsm      10m (1%)      0 (0%)      0 (0%)           0 (0%)         11m
+  kube-system                 kube-dns-b4f5c58c7-82zvj                            260m (27%)    0 (0%)      110Mi (3%)       210Mi (7%)     11m
+  kube-system                 kube-proxy-gke-mytest-default-pool-24d50f56-mckr    100m (10%)    0 (0%)      0 (0%)           0 (0%)         10m
+  kube-system                 pdcsi-node-2kxql                                    10m (1%)      0 (0%)      20Mi (0%)        100Mi (3%)     11m
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource                   Requests     Limits
+  --------                   --------     ------
+  cpu                        483m (51%)   0 (0%)
+  memory                     410Mi (14%)  890Mi (31%)
+  ephemeral-storage          0 (0%)       0 (0%)
+  hugepages-1Gi              0 (0%)       0 (0%)
+  hugepages-2Mi              0 (0%)       0 (0%)
+  attachable-volumes-gce-pd  0            0
+Events:
+  Type     Reason                   Age                From             Message
+  ----     ------                   ----               ----             -------
+  Normal   Starting                 13m                kubelet          Starting kubelet.
+  Warning  InvalidDiskCapacity      13m                kubelet          invalid capacity 0 on image filesystem
+  Normal   NodeAllocatableEnforced  13m                kubelet          Updated Node Allocatable limit across pods
+  Normal   NodeHasSufficientMemory  13m (x8 over 13m)  kubelet          Node gke-mytest-default-pool-24d50f56-mckr status is now: NodeHasSufficientMemory
+  Normal   NodeHasNoDiskPressure    13m (x7 over 13m)  kubelet          Node gke-mytest-default-pool-24d50f56-mckr status is now: NodeHasNoDiskPressure
+  Normal   NodeHasSufficientPID     13m (x7 over 13m)  kubelet          Node gke-mytest-default-pool-24d50f56-mckr status is now: NodeHasSufficientPID
+  Normal   Starting                 11m                kube-proxy       Starting kube-proxy.
+  Warning  ContainerdStart          11m (x2 over 11m)  systemd-monitor  Starting containerd container runtime...
+  Warning  DockerStart              11m (x3 over 11m)  systemd-monitor  Starting Docker Application Container Engine...
+  Warning  KubeletStart             11m                systemd-monitor  Started Kubernetes kubelet.
+  Warning  NodeSysctlChange         11m                sysctl-monitor   {"unmanaged": {"net.netfilter.nf_conntrack_buckets": "32768"}}
+
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl create ns monitoringnamespace/monitoring created
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get nsNAME              STATUS   AGE
+default           Active   14mkube-node-lease   Active   14m
+kube-public       Active   14m
+kube-system       Active   14m
+monitoring        Active   7s
+hgsat123@cloudshell:~ (my-project-64389)$
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get po -n kube-system
+NAME                                               READY   STATUS    RESTARTS   AGE
+event-exporter-gke-67986489c8-fs6kx                2/2     Running   0          27m
+fluentbit-gke-6wrnx                                2/2     Running   0          27m
+fluentbit-gke-hlbkp                                2/2     Running   0          27m
+fluentbit-gke-nq5md                                2/2     Running   0          27m
+gke-metrics-agent-7h8tx                            1/1     Running   0          27m
+gke-metrics-agent-q9rsg                            1/1     Running   0          27m
+gke-metrics-agent-wtttw                            1/1     Running   0          27m
+konnectivity-agent-5bd758f4cf-hvcwp                1/1     Running   0          26m
+konnectivity-agent-5bd758f4cf-p5nxp                1/1     Running   0          27m
+konnectivity-agent-5bd758f4cf-wqfb7                1/1     Running   0          26m
+konnectivity-agent-autoscaler-6cb774c9cc-phpsm     1/1     Running   0          27m
+kube-dns-autoscaler-844c9d9448-4bw2g               1/1     Running   0          27m
+kube-dns-b4f5c58c7-82zvj                           4/4     Running   0          26m
+kube-dns-b4f5c58c7-b7jz9                           4/4     Running   0          27m
+kube-proxy-gke-mytest-default-pool-24d50f56-8f0r   1/1     Running   0          26m
+kube-proxy-gke-mytest-default-pool-24d50f56-fbm7   1/1     Running   0          25m
+kube-proxy-gke-mytest-default-pool-24d50f56-mckr   1/1     Running   0          26m
+l7-default-backend-56cb9644f6-pnghj                1/1     Running   0          27m
+metrics-server-v0.3.6-9c5bbf784-b45sj              2/2     Running   0          26m
+pdcsi-node-2kxql                                   2/2     Running   0          27m
+pdcsi-node-fnfvn                                   2/2     Running   0          27m
+pdcsi-node-xz4m9                                   2/2     Running   0          27m
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get svc -n kube-system
+NAME                   TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)         AGE
+default-http-backend   NodePort    10.3.250.46   <none>        80:30858/TCP    28m
+kube-dns               ClusterIP   10.3.240.10   <none>        53/UDP,53/TCP   28m
+metrics-server         ClusterIP   10.3.241.11   <none>        443/TCP         28m
+
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get po gke-metrics-agent-7h8tx -n kube-system -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    components.gke.io/component-name: gke-metrics-agent
+    components.gke.io/component-version: 0.66.0
+    configHash: RBTtLBtGfvelMOkJH50zUCgycccZ7lktVGX+sHUYBh0=
+  creationTimestamp: "2021-10-30T05:55:13Z"
+  generateName: gke-metrics-agent-
+  labels:
+    component: gke-metrics-agent
+    controller-revision-hash: 7d8c94d769
+    k8s-app: gke-metrics-agent
+    pod-template-generation: "1"
+  name: gke-metrics-agent-7h8tx
+  namespace: kube-system
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: DaemonSet
+    name: gke-metrics-agent
+    uid: f847d984-f929-4863-a640-e48bec2336f5
+  resourceVersion: "868"
+  uid: e4e2b03d-89d7-4919-b3ca-ebed06dfacaf
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchFields:
+          - key: metadata.name
+            operator: In
+            values:
+            - gke-mytest-default-pool-24d50f56-fbm7
+  containers:
+  - command:
+    - /otelsvc
+    - --config=/conf/gke-metrics-agent-config.yaml
+    - --metrics-prefix=
+    - --log-profile=prod
+    - --metrics-addr=localhost:8200
+    env:
+    - name: NODE_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: spec.nodeName
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: POD_NAMESPACE
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.namespace
+    - name: KUBELET_HOST
+      value: 127.0.0.1
+    - name: GOMAXPROCS
+      value: "1"
+    - name: ARG1
+      value: ${1}
+    - name: ARG2
+      value: ${2}
+    - name: WINDOWS_JOB_ACTION
+      value: drop
+    image: gke.gcr.io/gke-metrics-agent:1.2.0-gke.0
+    imagePullPolicy: IfNotPresent
+    name: gke-metrics-agent
+    resources:
+      limits:
+        memory: 50Mi
+      requests:
+        cpu: 3m
+        memory: 50Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - all
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /conf
+      name: gke-metrics-agent-config-vol
+    - mountPath: /etc/ssl/certs
+      name: ssl-certs
+      readOnly: true
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: gke-metrics-agent-token-tlzd9
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  hostNetwork: true
+  nodeName: gke-mytest-default-pool-24d50f56-fbm7
+  nodeSelector:
+    kubernetes.io/os: linux
+  preemptionPolicy: PreemptLowerPriority
+  priority: 2000001000
+  priorityClassName: system-node-critical
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: gke-metrics-agent
+  serviceAccountName: gke-metrics-agent
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    operator: Exists
+  - effect: NoSchedule
+    operator: Exists
+  - key: components.gke.io/gke-managed-components
+    operator: Exists
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/disk-pressure
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/memory-pressure
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/pid-pressure
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/unschedulable
+    operator: Exists
+  - effect: NoSchedule
+    key: node.kubernetes.io/network-unavailable
+    operator: Exists
+  volumes:
+  - configMap:
+      defaultMode: 420
+      items:
+      - key: gke-metrics-agent-config
+        path: gke-metrics-agent-config.yaml
+      name: gke-metrics-agent-conf
+    name: gke-metrics-agent-config-vol
+  - hostPath:
+      path: /etc/ssl/certs
+      type: ""
+    name: ssl-certs
+  - name: gke-metrics-agent-token-tlzd9
+    secret:
+      defaultMode: 420
+      secretName: gke-metrics-agent-token-tlzd9
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2021-10-30T05:55:13Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2021-10-30T05:55:22Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2021-10-30T05:55:22Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2021-10-30T05:55:13Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://df0c4c57b08031f3c5da60f5ef848d8f6ec8e627caa5203256b5a5d65a0f1589
+    image: gke.gcr.io/gke-metrics-agent:1.2.0-gke.0
+    imageID: gke.gcr.io/gke-metrics-agent@sha256:4c8fa47f743516bb66c4feaa9d4179ff988cc38e5c2c7de1815471f1263a48bd
+    lastState: {}
+    name: gke-metrics-agent
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2021-10-30T05:55:22Z"
+  hostIP: 10.168.0.6
+  phase: Running
+  podIP: 10.168.0.6
+  podIPs:
+  - ip: 10.168.0.6
+  qosClass: Burstable
+  startTime: "2021-10-30T05:55:13Z"
+
+
+==== Configure IAM
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ gcloud iam service-accounts create prometheus --display-name prometheus-service-account
+Created service account [prometheus].
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ export PROJECT_ID=$(gcloud info --format='value(config.project)')
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ echo $PROJECT_ID
+my-project-64389
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ gcloud iam service-accounts list
+DISPLAY NAME: prometheus-service-account
+EMAIL: prometheus@my-project-64389.iam.gserviceaccount.com
+DISABLED: False
+
+DISPLAY NAME: Compute Engine default service account
+EMAIL: 311920159916-compute@developer.gserviceaccount.com
+DISABLED: False
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ PROMETHEUS_SA_EMAIL=$(gcloud iam service-accounts list \
+> --filter="displayName:prometheus-service-account" --format='value(email)')
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ echo $PROMETHEUS_SA_EMAIL
+prometheus@my-project-64389.iam.gserviceaccount.com
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$
+
+====
+Install kube-state-metrics 
+
+hgsat123@cloudshell:~ (my-project-64389)$ git clone https://github.com/devopscube/kube-state-metrics-configs.git
+Cloning into 'kube-state-metrics-configs'...
+remote: Enumerating objects: 10, done.
+remote: Counting objects: 100% (10/10), done.
+remote: Compressing objects: 100% (9/9), done.
+remote: Total 10 (delta 0), reused 7 (delta 0), pack-reused 0
+Unpacking objects: 100% (10/10), done.
+
+hgsat123@cloudshell:~/kube-state-metrics-configs (my-project-64389)$ ls -l
+total 24
+-rw-r--r-- 1 hgsat123 hgsat123  377 Oct 30 06:58 cluster-role-binding.yaml
+-rw-r--r-- 1 hgsat123 hgsat123 1651 Oct 30 06:58 cluster-role.yaml
+-rw-r--r-- 1 hgsat123 hgsat123 1069 Oct 30 06:58 deployment.yaml
+-rw-r--r-- 1 hgsat123 hgsat123   78 Oct 30 06:58 README.md
+-rw-r--r-- 1 hgsat123 hgsat123  193 Oct 30 06:58 service-account.yaml
+-rw-r--r-- 1 hgsat123 hgsat123  406 Oct 30 06:58 service.yaml
+
+hgsat123@cloudshell:~ (my-project-64389)$
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl apply -f kube-state-metrics-configs/
+clusterrolebinding.rbac.authorization.k8s.io/kube-state-metrics created
+clusterrole.rbac.authorization.k8s.io/kube-state-metrics created
+deployment.apps/kube-state-metrics created
+serviceaccount/kube-state-metrics created
+service/kube-state-metrics created
+hgsat123@cloudshell:~ (my-project-64389)$
+
+kube-dns-autoscaler-844c9d9448-4bw2g               1/1     Running   0          66m
+kube-dns-b4f5c58c7-82zvj                           4/4     Running   0          65m
+kube-dns-b4f5c58c7-b7jz9                           4/4     Running   0          66m
+kube-proxy-gke-mytest-default-pool-24d50f56-8f0r   1/1     Running   0          65m
+kube-proxy-gke-mytest-default-pool-24d50f56-fbm7   1/1     Running   0          64m
+kube-proxy-gke-mytest-default-pool-24d50f56-mckr   1/1     Running   0          65m
+kube-state-metrics-79cff5689d-t6j8n                1/1     Running   0          30s
+l7-default-backend-56cb9644f6-pnghj                1/1     Running   0          66m
+metrics-server-v0.3.6-9c5bbf784-b45sj              2/2     Running   0          65m
+pdcsi-node-2kxql                                   2/2     Running   0          65m
+pdcsi-node-fnfvn                                   2/2     Running   0          65m
+pdcsi-node-xz4m9                                   2/2     Running   0          65m
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ kubectl get svc -n kube-system
+NAME                   TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)             AGE
+default-http-backend   NodePort    10.3.250.46   <none>        80:30858/TCP        69m
+kube-dns               ClusterIP   10.3.240.10   <none>        53/UDP,53/TCP       69m
+kube-state-metrics     ClusterIP   None          <none>        8080/TCP,8081/TCP   3m23s
+metrics-server         ClusterIP   10.3.241.11   <none>        443/TCP             69m
+
+==== Prometheus
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ kubectl create -f clusterRole.yaml
+clusterrole.rbac.authorization.k8s.io/prometheus created
+clusterrolebinding.rbac.authorization.k8s.io/prometheus created
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ gcloud projects add-iam-policy-binding ${PROJECT_ID} --role roles/monitoring.metricWriter --member serviceAccount:${PROMETHEUS_SA_EMAIL}
+Updated IAM policy for project [my-project-64389].
+bindings:
+- members:
+  - serviceAccount:service-311920159916@compute-system.iam.gserviceaccount.com
+  role: roles/compute.serviceAgent
+- members:
+  - serviceAccount:service-311920159916@container-engine-robot.iam.gserviceaccount.com
+  role: roles/container.serviceAgent
+- members:
+  - serviceAccount:service-311920159916@containerregistry.iam.gserviceaccount.com
+  role: roles/containerregistry.ServiceAgent
+- members:
+  - serviceAccount:311920159916-compute@developer.gserviceaccount.com
+  - serviceAccount:311920159916@cloudservices.gserviceaccount.com
+  role: roles/editor
+- members:
+  - serviceAccount:prometheus@my-project-64389.iam.gserviceaccount.com
+  role: roles/monitoring.metricWriter
+- members:
+  - user:hgsat123@gmail.com
+  role: roles/owner
+- members:
+  - serviceAccount:service-311920159916@gcp-sa-pubsub.iam.gserviceaccount.com
+  role: roles/pubsub.serviceAgent
+etag: BwXPjNUUf9w=
+version: 1
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ WORKDIR=`pwd`
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ echo $WORKDIR
+/home/hgsat123/gke-prometheus
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ gcloud projects add-iam-policy-binding ${PROJECT_ID} --role roles/monitoring.metricWriter --member serviceAccount:${PROMETHEUS_SA_EMAIL}
+Updated IAM policy for project [my-project-64389].
+bindings:
+- members:
+  - serviceAccount:service-311920159916@compute-system.iam.gserviceaccount.com
+  role: roles/compute.serviceAgent
+- members:
+  - serviceAccount:service-311920159916@container-engine-robot.iam.gserviceaccount.com
+  role: roles/container.serviceAgent
+- members:
+  - serviceAccount:service-311920159916@containerregistry.iam.gserviceaccount.com
+  role: roles/containerregistry.ServiceAgent
+- members:
+  - serviceAccount:311920159916-compute@developer.gserviceaccount.com
+  - serviceAccount:311920159916@cloudservices.gserviceaccount.com
+  role: roles/editor
+- members:
+  - serviceAccount:prometheus@my-project-64389.iam.gserviceaccount.com
+  role: roles/monitoring.metricWriter
+- members:
+  - user:hgsat123@gmail.com
+  role: roles/owner
+- members:
+  - serviceAccount:service-311920159916@gcp-sa-pubsub.iam.gserviceaccount.com
+  role: roles/pubsub.serviceAgent
+etag: BwXPjNp5r54=
+version: 1
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$
+
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ echo $WORKDIR/home/hgsat123/gke-prometheus
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ gcloud iam service-accounts keys create $WORKDIR/prometheus-service-account.json --iam-account ${PROMETHEUS_SA_EMAIL}
+created key [e1e96f3f918ad25c07be566f01d3dca07907fd72] of type [json] as [/home/hgsat123/gke-prometheus/prometheus-service-account.json] for [prometheus@my-project-64389.iam.gserviceaccount.com]
+
+===
+The Prometheus sidecar container uses the service account key as a secret to authenticate to the Cloud Monitoring API.
+
+GKE clusters don't require you to manually configure these keys. Pods (and containers) running in GKE can access the Compute Engine instance metadata and retrieve the service account information attached to the GKE nodes (or Compute Engine instances) that the Prometheus server is running on. For GKE clusters, the Prometheus sidecar container can authenticate to the Cloud Monitoring API by using the service account information from the instance metadata service.
+
+git clone https://github.com/GoogleCloudPlatform/prometheus-stackdriver-gke
+
+====
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ ls -l
+total 28
+-rw-r--r-- 1 hgsat123 hgsat123  618 Oct 30 07:38 clusterRole.yaml
+-rw-r--r-- 1 hgsat123 hgsat123 5142 Oct 30 07:03 config-map.yaml
+-rw-r--r-- 1 hgsat123 hgsat123 1171 Oct 30 06:33 prometheus-deployment.yaml
+-rw------- 1 hgsat123 hgsat123 2323 Oct 30 07:30 prometheus-service-account.json
+-rw-r--r-- 1 hgsat123 hgsat123  298 Oct 29 06:02 prometheus-service.yaml
+-rw-r--r-- 1 hgsat123 hgsat123  195 Oct 29 06:02 README.md
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ vi config-map.yaml
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ kubectl create -f config-map.yaml
+configmap/prometheus-server-conf created
+
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ kubectl get storageclass
+NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+premium-rwo          pd.csi.storage.gke.io   Delete          WaitForFirstConsumer   true                   129m
+standard (default)   kubernetes.io/gce-pd    Delete          Immediate              true                   129m
+standard-rwo         pd.csi.storage.gke.io   Delete          WaitForFirstConsumer   true                   129m
+
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get pvc -n monitoring
+NAME               STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+prometheus-claim   Bound    pvc-aacf4966-72d8-479d-837b-0e4cb2e3b881   30Gi       RWO            standard       8s
+hgsat123@cloudshell:~ (my-project-64389)$ cp pvc.yaml gke-prometheus/
+hgsat123@cloudshell:~ (my-project-64389)$ cat pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-claim
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ kubectl create -f prometheus-deployment.yaml
+deployment.apps/prometheus-deployment created
+
+-==========
+hgsat123@cloudshell:~ (my-project-64389)$ ACCOUNT=$(gcloud info --format='value(config.account)')
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl create clusterrolebinding owner-cluster-admin-binding --clusterrole cluster-admin --user $ACCOUNT
+clusterrolebinding.rbac.authorization.k8s.io/owner-cluster-admin-binding created
+
+hgsat123@cloudshell:~ (my-project-64389)$ kubectl get clusterrolebinding |grep owner-cluster-admin-binding
+owner-cluster-admin-binding                            ClusterRole/cluster-admin                                          46s
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ cat prometheus-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: monitoring
+  annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port:   '9090'
+spec:
+  selector:
+    app: prometheus-server
+  type: LoadBalancer
+  ports:
+    - port: 8086
+      targetPort: 9090
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ kubectl create -f prometheus-service.yaml
+service/prometheus-service created
+
+hgsat123@cloudshell:~/gke-prometheus (my-project-64389)$ kubectl get svc -n monitoring
+NAME                 TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)          AGE
+prometheus-service   LoadBalancer   10.3.246.242   34.94.211.138   8086:30470/TCP   65s
+
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud config set project my-project-64389
+Updated property [core/project].
+hgsat123@cloudshell:~ (my-project-64389)$
+hgsat123@cloudshell:~ (my-project-64389)$
+hgsat123@cloudshell:~ (my-project-64389)$
+hgsat123@cloudshell:~ (my-project-64389)$ export CLOUDSDK_COMPUTE_REGION=us-west2
+hgsat123@cloudshell:~ (my-project-64389)$ export CLOUDSDK_COMPUTE_ZONE=us-west2-a
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud config set compute/region us-west2
+WARNING: Property [region] is overridden by environment setting [CLOUDSDK_COMPUTE_REGION=us-west2]
+Updated property [compute/region].
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud config set compute/zone us-west2-a
+WARNING: Property [zone] is overridden by environment setting [CLOUDSDK_COMPUTE_ZONE=us-west2-a]
+Updated property [compute/zone].
+hgsat123@cloudshell:~ (my-project-64389)$ gcloud container clusters delete mytest --zone=us-west2-a
+The following clusters will be deleted.
+ - [mytest] in [us-west2-a]
+
+Do you want to continue (Y/n)?  Y
+
+Deleting cluster mytest...done.     
+Deleted [https://container.googleapis.com/v1/projects/my-project-64389/zones/us-west2-a/clusters/mytest].

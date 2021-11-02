@@ -1,0 +1,44 @@
+hsatg1234@gcp-dpe:~/continuous-deployment-on-kubernetes$ gcloud container clusters create mytest --num-nodes 3 --scopes "https://www.googleapis.com/auth/projecthosting,storage-rw"
+Creating cluster mytest...done.
+Created [https://container.googleapis.com/v1/projects/gcp-dpe/zones/us-east1-d/clusters/mytest].
+kubeconfig entry generated for mytest.
+NAME    ZONE        MASTER_VERSION  MASTER_IP       MACHINE_TYPE   NODE_VERSION  NUM_NODES  STATUS
+mytest  us-east1-d  1.6.7           104.196.99.206  n1-standard-1  1.6.7         3          RUNNING
+
+
+hsatg1234@gcp-dpe:~/continuous-deployment-on-kubernetes$ gcloud container clusters create mytest --num-nodes 2 --scopes "https://www.googleapis.com/auth/projecthosting,storage-rw"
+Creating cluster mytest...done.
+Created [https://container.googleapis.com/v1/projects/gcp-dpe/zones/us-east1-d/clusters/mytest].
+kubeconfig entry generated for mytest.
+NAME    ZONE        MASTER_VERSION  MASTER_IP     MACHINE_TYPE   NODE_VERSION  NUM_NODES  STATUS
+mytest  us-east1-d  1.6.7           35.185.67.16  n1-standard-1  1.6.7         2          RUNNING
+
+hsatg1234@gcp-dpe:~/continuous-deployment-on-kubernetes$ gcloud container clusters get-credentials mytest
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for mytest.
+hsatg1234@gcp-dpe:~/continuous-deployment-on-kubernetes$
+
+#gcloud config set compute/zone us-east1-d
+
+hsatg1234@gcp-dpe:~$ export CURRENT_CONTEXT=$(kubectl config current-context) && export CURRENT_CLUSTER=$(kubectl config view -o go-template="{{\$curr_context := \"$CURRENT_CONTEXT\" }}{{range .contexts}}{{if eq .name \$curr_context}}{{.context.cluster}}{{end}}{{end}}") && echo $(kubectl config view -o go-template="{{\$cluster_context := \"$CURRENT_CLUSTER\"}}{{range .clusters}}{{if eq .name \$cluster_context}}{{.cluster.server}}{{end}}{{end}}")
+https://35.185.67.16
+
+hsatg1234@gcp-dpe:~$ echo $CURRENT_CONTEXT
+gke_gcp-dpe_us-east1-d_mytest
+
+hsatg1234@gcp-dpe:~$ echo $(kubectl get secret -o go-template='{{index .data "ca.crt" }}' $(kubectl get sa default -o go-template="{{range .secrets}}{{.name}}{{end}}"))
+LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURERENDQWZTZ0F3SUJBZ0lSQUlUM0plR1hZczlzTnZzYUdueXp4RzB3RFFZSktvWklodmNOQVFFTEJRQXcKTHpFdE1Dc0dBMVVFQXhNa01tUTFNamM1WVdJdFpHTTJOeTAwT1dKbExUbGtaVFV0TVdaalltUTNNamMzWlROaQpNQjRYRFRFM01Ea3dOVEExTXpFd09Gb1hEVEl5TURrd05EQTJNekV3T0Zvd0x6RXRNQ3NHQTFVRUF4TWtNbVExCk1qYzVZV0l0WkdNMk55MDBPV0psTFRsa1pUVXRNV1pqWW1RM01qYzNaVE5pTUlJQklqQU5CZ2txaGtpRzl3MEIKQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBbUdLK1BtNmM1MURvRUJkdVU2ZjRQcVVHVnQ2Y0piSjB5NFpBeWJ2QQpLb3NwaTI4ZXZuVGhkcG45SjdFbndvU1p2VHhYSG5QZGdrQmpGcmVMN0dWODVub2xKSDI4S1VFQS95K1BrYU1LClVaaGFFRVRkRjRlRitTM1E5OUtIckhWSS9IaHZMNkJsK1pIVGFKak9KcmRZTjhhZmYxZGtnR1dOODdSR1VEK3oKdWhEaXNNMWl3WVVXcURvQTlLei9XblFLNWZWTnRqeDVJbmFacGd2elZBK1djTXJDOURBOGx0UWkxSzdKUEI3dgpFckN2QnEzbVlmMlMwZWJ2TzRxaEwrdTVMNHdsdEZ5dWhKZFhjbU00NENLa0tDa1hXQVR3UkJ2dW5taE5kdzRECjAwalo4MmdjcjBNc1dMT1dXVXBvbGh0NGJUSEt0WDliTUlzUURVS0hhVElRb3dJREFRQUJveU13SVRBT0JnTlYKSFE4QkFmOEVCQU1DQWdRd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQQpYL0lpYkxMT2Q5ZlYrSEZJUE53TWttZ3lsazRjSThXOTh5WEdCbjlCUXVwN0Q3SnVNdWlnNURuaVoxVUxyN1NjCkx6MElhVmY4SUp0Yy9KR0RkRHRZYk94VEVYZUdSTHhneGw4RGVmZGNCOFNCc0NOVllvNm8zek9KcUxicGdKWHQKeWF3RFRjREFmeVA0TVJpUUYxVERIVFpseEZMNW5BMU56Y1YyMkNiRHRWY0JhZmo4OURIZXNtblpwcFNkNy9BbwpCMGNaQWtZT1FxVm1FNzFjMXRGSmVqdmhhbklMSCtjcUlVd0NzTnhnYzE5TStkRjJRcFVVVXZ3UElTVkoxdlNTCmFZeWo2dXdDRGRQa3JVa3dtazd3d3I3bnVmaEZsMDFjeVJjQWREOW9QM2R6ZnNsRk1NVStON1hGeTI0dXdaUW8KYmV6VzM2SnpTbXp4dGtGSmlWTXh6UT09Ci0
+
+
+echo $(kubectl get secret -o go-template='{{index .data "token" }}' $(kubectl get sa default -o go-template="{{range .secrets}}{{.name}}{{end}}"))
+ZXlKaGJHY2lPaUpTVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBjM01pT2lKcmRXSmxjbTVsZEdWekwzTmxjblpwWTJWaFkyTnZkVzUwSWl3aWEzVmlaWEp1WlhSbGN5NXBieTl6WlhKMmFXTmxZV05qYjNWdWRDOXVZVzFsYzNCaFkyVWlPaUprWldaaGRXeDBJaXdpYTNWaVpYSnVaWFJsY3k1cGJ5OXpaWEoyYVdObFlXTmpiM1Z1ZEM5elpXTnlaWFF1Ym1GdFpTSTZJbVJsWm1GMWJIUXRkRzlyWlc0dE5IaGtiV3NpTENKcmRXSmxjbTVsZEdWekxtbHZMM05sY25acFkyVmhZMk52ZFc1MEwzTmxjblpwWTJVdFlXTmpiM1Z1ZEM1dVlXMWxJam9pWkdWbVlYVnNkQ0lzSW10MVltVnlibVYwWlhNdWFXOHZjMlZ5ZG1salpXRmpZMjkxYm5RdmMyVnlkbWxqWlMxaFkyTnZkVzUwTG5WcFpDSTZJakpqWlRRek9UQTNMVGt5TURRdE1URmxOeTFoTWpNMUxUUXlNREV3WVRobE1EQmhOeUlzSW5OMVlpSTZJbk41YzNSbGJUcHpaWEoyYVdObFlXTmpiM1Z1ZERwa1pXWmhkV3gwT21SbFptRjFiSFFpZlEuZjVCVE11dXcxVnk2SkdveVNzdVNlN1JCc1dXVENBLW9ENU5ZdDhGUDlkV3dUWGZBN0hVc2h3LURBRHYwNHJZNi10eUYzSDRwc0ItQk1sLVV5bEMyRzBUV3I2eU5iVUVEYjE2M0ctT1ozUEJrLUdFZEZzOFI3M205QS14Ulc4ZGtjNWJFN2pYV3F6cm9kMHlXckJRX3AxbnpzS1JvWThPUGVTOUJJVGF2S01NZG80OW1wakNjNThxcGphS29Nd0VNaXV1MjcyQUZVYTN2TGcyRmVkYmVEdE9QLThmS0Q3Q0JfaWZ5cjFuUU1CWnRhWHAxdHFwRWJjNGlEZGtWWnRyc3p0RmFaQWZmWDAyMnQ1NmdsZTdITmVra21KZHJZamNCOGtDOFFfczJSVGx5Z05UVGdQN3JNZGpmb1VSXzJnMG8xS2dicUVlUlRNaXRQMnh3Q0FaM1RR
+hsatg1234@gcp-dpe:~$
+
+hsatg1234@gcp-dpe:~$ gcloud container clusters delete mytest
+The following clusters will be deleted.
+ - [mytest] in [us-east1-d]
+
+Do you want to continue (Y/n)?  Y
+
+Deleting cluster mytest...done.
+Deleted [https://container.googleapis.com/v1/projects/gcp-dpe/zones/us-east1-d/clusters/mytest].
